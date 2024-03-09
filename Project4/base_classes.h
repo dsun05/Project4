@@ -38,4 +38,5 @@ public:
     virtual std::vector<TourCommand> generate_tour(const Stops &stops) const = 0;
 };
 
+
 #endif // BASECLASSES_H

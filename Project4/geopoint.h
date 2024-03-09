@@ -26,5 +26,4 @@ struct GeoPoint
   std::string sLongitude;
 };
 
-
 #endif  // GEOPOINT_H

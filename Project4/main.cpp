@@ -9,7 +9,6 @@
 #include "stops.h"
 #include "tourcmd.h"
 #include "tour_generator.h"
-
 using namespace std;
 
 void print_tour(vector<TourCommand>& tcs)

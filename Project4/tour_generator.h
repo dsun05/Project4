@@ -18,5 +18,4 @@ public:
     virtual std::vector<TourCommand> generate_tour(const Stops& stops) const;
 };
 
-
 #endif /* tour_generator_h */

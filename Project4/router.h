@@ -17,6 +17,7 @@ public:
     virtual ~Router();
     virtual std::vector<GeoPoint> route(const GeoPoint& pt1,
     const GeoPoint& pt2) const;
+    
 };
 
 

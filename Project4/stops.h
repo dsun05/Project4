@@ -50,4 +50,5 @@ private:
     std::vector<POI_DATA> poi_data_;
 };
 
+
 #endif // __STOPS_H__
