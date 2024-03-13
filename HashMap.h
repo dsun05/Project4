@@ -34,10 +34,10 @@ public:
         const auto& hm = *this;
         return const_cast<T*>(hm.find(key));
     }
-    bool contains(const std::string& key) const;
 
 private:    
-    void rehash();
+    void rehash();    
+    bool contains(const std::string& key) const;
     HashMap(const HashMap&) = delete;
     HashMap& operator=(const HashMap&) = delete;
     int hash(const std::string& key) const {
@@ -150,6 +150,5 @@ void HashMap<T>::rehash() {
     delete[] m_list;
     m_list = new_list;
 }
-
 
 #endif /* HashMap_h */

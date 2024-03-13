@@ -61,8 +61,19 @@ int main(int argc, char* argv[])
         cout << "Unable to load map data" << endl;
     }
 
+    GeoPoint p1("34.0625329", "-118.4470263");
+    GeoPoint p2("34.0685657", "-118.4489289");
+
     Router router(geodb);
-    TourGenerator tg(geodb, router);
+    vector<GeoPoint> path = router.route(p1,p2);
+
+    for(auto p : path)
+	{
+        cerr << p.to_string() << endl;
+	}
+
+    /*
+        TourGenerator tg(geodb, router);
 
     Stops stops;
     if (!stops.load("stops.txt"))
@@ -76,4 +87,6 @@ int main(int argc, char* argv[])
         cout << "Unable to generate tour!\n";
     else
         print_tour(tcs);
+    */
+
 }

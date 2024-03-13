@@ -20,7 +20,6 @@ public:
     bool load(const std::string& map_data_file);
     bool get_poi_location(const std::string& poi,
     GeoPoint& point) const;
-    
     std::vector<GeoPoint> get_connected_points(const GeoPoint& pt)
     const;
     std::string get_street_name(const GeoPoint& pt1,
@@ -39,6 +38,5 @@ private:
     HashMap<GeoPoint> m_poi;
     HashMap<std::vector<GeoPoint>> m_connected_points;
 };
-
 
 #endif /* geodb_h */
