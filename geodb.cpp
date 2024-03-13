@@ -13,10 +13,6 @@
 
 using namespace std;
 
-GeoDatabase::~GeoDatabase()
-{
-}
-
 bool GeoDatabase::load(const std::string& map_data_file)
 {
 	std::ifstream infile((map_data_file).c_str());
@@ -41,10 +37,9 @@ bool GeoDatabase::load(const std::string& map_data_file)
 
 		//Insert Street into all encompassing map, and connect the endpoints to each other
 		insertStreet(streetName, { startPoint, endPoint });
-		insertConnection(streetName, startPoint, endPoint);
+		insertConnection(startPoint, endPoint);
 
 		//Get number of vertices
-		infile.ignore(10000, '\n');
 		int numVertices = 0;
 		infile >> numVertices;
 		infile.ignore(10000, '\n');
@@ -58,14 +53,13 @@ bool GeoDatabase::load(const std::string& map_data_file)
 
 			insertStreet(streetName, { startPoint, mid });
 			insertStreet(streetName, { endPoint, mid });
-			insertConnection(streetName, startPoint, mid);
-			insertConnection(streetName, mid, endPoint);
+			insertConnection(startPoint, mid);
+			insertConnection(mid, endPoint);
 
 			//Get Vertices
 
 			stringstream ss(line);
 			string segment;
-			vector<std::string> seglist;
 			for (int i = 0; i < numVertices; i++) {
 				getline(infile, line);
 
@@ -82,11 +76,12 @@ bool GeoDatabase::load(const std::string& map_data_file)
 
 				insertStreet("a path", {vPoint, mid});
 				m_poi.insert(vStreetName, vPoint);
-				insertConnection("a path", vPoint, mid);
+				insertConnection(vPoint, mid);
 			}
 		}
 	}
-	return false;
+	infile.close();
+	return true;
 }
 
 bool GeoDatabase::get_poi_location(const std::string& poi, GeoPoint& point) const
@@ -99,17 +94,14 @@ bool GeoDatabase::get_poi_location(const std::string& poi, GeoPoint& point) cons
 	return true;
 }
 
+
 std::vector<GeoPoint> GeoDatabase::get_connected_points(const GeoPoint& pt) const
 {
 	if (m_connected_points.find(pt.to_string()) == nullptr)
 	{
-		vector<GeoPoint> v;
-		return v;
+		return {};
 	}
-	else
-	{
-		return *m_connected_points.find(pt.to_string());
-	}
+	return *m_connected_points.find(pt.to_string());
 }
 
 std::string GeoDatabase::get_street_name(const GeoPoint& pt1, const GeoPoint& pt2) const
@@ -121,13 +113,11 @@ std::string GeoDatabase::get_street_name(const GeoPoint& pt1, const GeoPoint& pt
 	return m_map.find(address)->name;
 }
 
-void GeoDatabase::insertConnection(const std::string& street_name, const GeoPoint& p1, const GeoPoint& p2)
+void GeoDatabase::insertConnection(const GeoPoint& p1, const GeoPoint& p2)
 {
-	if (m_connected_points.find(p1.to_string()) == nullptr)
+	if(m_connected_points.find(p1.to_string()) == nullptr)
 	{
-		vector<GeoPoint> v;
-		v.push_back(p2);
-		m_connected_points.insert(p1.to_string(), v);
+		m_connected_points.insert(p1.to_string(), {p2});
 	}
 	else
 	{
@@ -136,9 +126,7 @@ void GeoDatabase::insertConnection(const std::string& street_name, const GeoPoin
 
 	if (m_connected_points.find(p2.to_string()) == nullptr)
 	{
-		vector<GeoPoint> v;
-		v.push_back(p1);
-		m_connected_points.insert(p2.to_string(), v);
+		m_connected_points.insert(p2.to_string(), { p1 });
 	}
 	else
 	{

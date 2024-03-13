@@ -1,67 +1,74 @@
-//
-//  Router.cpp
-//  Project4
-//
-//  Created by David Sun on 3/8/24.
-//
-
 #include "router.h"
-#include <list>
-#include <queue>
 #include "geotools.h"
+#include "geopoint.h"
+#include "HashMap.h"
+#include <queue>
+#include <algorithm>
 using namespace std;
 
-std::vector<GeoPoint> Router::route(const GeoPoint& pt1, const GeoPoint& pt2) const
-{
-	if(pt1.to_string() == pt2.to_string())
-	{
-		return;
-	}
+// Helper struct to represent a state in the BFS traversal
+struct State {
 
-	//Get the distance between the two points
-	double distance = distance_earth_km(pt1, pt2);
+    GeoPoint point; // Current GeoPoint
+    double distance; // Distance traveled so far
 
-	std::vector<GeoPoint> m_visited;
-	std::list<Route> m_routes;
+    // Constructor
+    State(const GeoPoint& p, double d) : point(p), distance(d) {}
 
-	queue<GeoPoint> queue;
+    // Operator overloading for priority comparison in the priority queue
+    bool operator<(const State& other) const {
+        // Priority based on distance traveled so far (shortest distance first)
+        return distance > other.distance;
+    }
+};
 
-	for (auto it = m_geodb.get_connected_points(pt1).begin(); it != m_geodb.get_connected_points(pt1).end(); it++) 
-	{
-		//Create a new route for each connected point
-		Route route;
-		route.stops.push_back(*it);
-		route.length = distance_earth_km(pt1, *it);
-		m_routes.push_back(route);
-	}
+std::vector<GeoPoint> Router::route(const GeoPoint& pt1, const GeoPoint& pt2) const {
 
-	for (auto it = m_routes.begin(); it != m_routes.end(); it++)
-	{
-		queue.push((*it).stops.back());
+    std::vector<GeoPoint> path;
 
-		while (!queue.empty()) {
-			GeoPoint current = queue.front();
-			queue.pop();
+    if (pt1.to_string() == pt2.to_string()) {
+        path.push_back(pt1);
+        return path;
+    }
 
-			if(current.to_string() == pt2.to_string())
-			{
-				break;
-			}
+    std::priority_queue<State> pq;
+    pq.push(State(pt1, 0.0));
 
+    HashMap<GeoPoint> visited;
+    visited.insert(pt1.to_string(), pt1);
 
-			for (auto it = m_geodb.get_connected_points(current).begin(); it != m_geodb.get_connected_points(current).end(); it++) 
-			{
-				Route newRoute;
-				newRoute.stops.push_back(*it);
-				newRoute.length = distance_earth_km(current, *it);
-				m_routes.push_back(newRoute);
-				queue.push(*it);
-			}
-		}
-	}
+    HashMap<GeoPoint> parent;
+    parent.insert(pt1.to_string(), GeoPoint());
 
+    while (!pq.empty()) {
+        State current = pq.top();
+        pq.pop();
 
+        // If destination reached, reconstruct and return the path
+        if (current.point.to_string() == pt2.to_string()) {
+            GeoPoint p = current.point;
+            while (p.to_string() != pt1.to_string()) {
+                path.push_back(p);
+                p = *parent.find(p.to_string());
+            }
+            path.push_back(pt1);
+            std::reverse(path.begin(), path.end());
+            return path;
+        }
 
+        // Iterate through connected GeoPoints
+        for (const GeoPoint& next : m_geodb.get_connected_points(current.point)) {
 
-	return std::vector<GeoPoint>();
+            double new_distance = current.distance + distance_earth_km(current.point, next);
+
+            // If next GeoPoint not visited or new distance shorter, update priority queue and parent
+            if (visited.find(next.to_string()) == nullptr || new_distance < current.distance) {
+                pq.push(State(next, new_distance));
+                visited.insert(next.to_string(), next);
+                parent.insert(next.to_string(), current.point);
+            }
+        }
+    }
+    // No path found
+    return path;
 }

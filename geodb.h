@@ -15,8 +15,8 @@
 class GeoDatabase: public GeoDatabaseBase
 {
 public:
-    GeoDatabase() : m_map(), m_poi(), m_midpoints(), m_connected_points() {};
-    ~GeoDatabase();
+    GeoDatabase() : m_map(), m_poi(), m_connected_points() {};
+    ~GeoDatabase() {};
     bool load(const std::string& map_data_file);
     bool get_poi_location(const std::string& poi,
     GeoPoint& point) const;
@@ -26,7 +26,7 @@ public:
     std::string get_street_name(const GeoPoint& pt1,
     const GeoPoint& pt2) const;
 private:
-    void insertConnection(const std::string& street_name, const GeoPoint& p1, const GeoPoint& p2);
+    void insertConnection(const GeoPoint& p1, const GeoPoint& p2);
     void insertStreet(const std::string& street_name, const std::vector<GeoPoint>& points);
 
     struct Street
@@ -37,7 +37,6 @@ private:
 
     HashMap<Street> m_map;
     HashMap<GeoPoint> m_poi;
-    HashMap<GeoPoint> m_midpoints;
     HashMap<std::vector<GeoPoint>> m_connected_points;
 };
 

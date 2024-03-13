@@ -29,23 +29,25 @@ bool GeoDatabase::load(const std::string& map_data_file)
     string line;
     while (getline(file, line))
     {
+        //cout << "street: " << line << endl;
         //extract the street
-        istringstream iss(line);
-        string street;
-        iss >> street;
-        //extract the geopoints
-        getline(iss, line);
+        string street = line;
+        //move onto next line
+        getline(file, line);
         istringstream iss2(line);
         string lat1, lon1, lat2, lon2;
+        //cout << "line: " << line << endl;
+
         iss2 >> lat1 >> lon1 >> lat2 >> lon2;
+        //cout << lat1 << lon1 << lat2 << lon2 << endl;
         GeoPoint p1(lat1, lon1);
         GeoPoint p2(lat2, lon2);
         //extract the # of points of interests
-        getline(iss2, line);
+        getline(file, line);
         istringstream iss3(line);
         int num_poi;
         iss3 >> num_poi;
-
+        //cout << "num_poi: " << num_poi << endl;
         //update the connected_points hashmap
         //for the first point
         if (connected_points.find(p1.to_string()) == nullptr)
@@ -75,17 +77,26 @@ bool GeoDatabase::load(const std::string& map_data_file)
         street_name.insert(p2.to_string() + " " + p1.to_string(), street);
 
         //extract the points of interests and put them into the hashmap POI
+        bool hasInsertedMidpoint = false;
         for (int i = 0; i < num_poi; i++)
         {
-            getline(iss3, line);
-            istringstream iss4(line);
-            string lat, lon, poi;
+            getline(file, line);
+            //cout << "line: " << line << endl;
+            size_t pos = line.find('|');
+
+            // Extract the name and coordinates substrings
+            std::string poi = line.substr(0, pos);
+            //cout << "poi: " << poi << endl;
+            std::string coordinates = line.substr(pos + 1);
+            istringstream iss4(coordinates);
+            string lat, lon;
             iss4 >> lat >> lon;
-            getline(iss4, poi);
+            //cout << "lat: " << lat << " lon: " << lon << endl;
             GeoPoint p(lat, lon);
             POI.insert(poi, p);
             //update the connected_points hashmap with midpoint paths
             GeoPoint mp = midpoint(p1, p2);
+            connected_points.insert(p.to_string(), vector<GeoPoint>{mp});
             if (connected_points.find(mp.to_string()) == nullptr)
             {
                 vector<GeoPoint> v;
@@ -107,7 +118,7 @@ bool GeoDatabase::load(const std::string& map_data_file)
                 v.push_back(mp);
                 connected_points.insert(p1.to_string(), v);
             }
-            else
+            else if (!hasInsertedMidpoint)
             {
                 connected_points.find(p1.to_string())->push_back(mp);
             }
@@ -118,9 +129,10 @@ bool GeoDatabase::load(const std::string& map_data_file)
                 v.push_back(mp);
                 connected_points.insert(p2.to_string(), v);
             }
-            else
+            else if (!hasInsertedMidpoint)
             {
                 connected_points.find(p2.to_string())->push_back(mp);
+                hasInsertedMidpoint = true;
             }
 
             //update the street_name hashmap
@@ -128,6 +140,8 @@ bool GeoDatabase::load(const std::string& map_data_file)
             street_name.insert(p2.to_string() + " " + mp.to_string(), street);
             street_name.insert(mp.to_string() + " " + p1.to_string(), street);
             street_name.insert(mp.to_string() + " " + p2.to_string(), street);
+            street_name.insert(mp.to_string() + " " + p.to_string(), "a path");
+            street_name.insert(p.to_string() + " " + mp.to_string(), "a path");
         }
     }
     return true;

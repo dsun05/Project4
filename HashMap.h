@@ -34,9 +34,9 @@ public:
         const auto& hm = *this;
         return const_cast<T*>(hm.find(key));
     }
+    bool contains(const std::string& key) const;
 
 private:    
-    bool contains(const std::string& key) const;
     void rehash();
     HashMap(const HashMap&) = delete;
     HashMap& operator=(const HashMap&) = delete;
@@ -63,7 +63,6 @@ void HashMap<T>::insert(const std::string& key, const T& value) {
 
     if (!contains(key)) {
         if ((m_items + 1) / static_cast<double>(m_nBuckets) > m_maxLoad) {
-            //std::cerr<<"Rehashing " << m_items << " items" << std::endl;
             rehash();
         }
         index = hash(key);
@@ -99,6 +98,7 @@ T& HashMap<T>::operator[](const std::string& key) {
 
 template <typename T>
 const T* HashMap<T>::find(const std::string& key) const {
+
     int index = hash(key);
 
     // Search for the key and return its value
